@@ -12,10 +12,13 @@ if backend_path not in sys.path:
 try:
     from services.audio_service import AudioTranscriptionService
     from nlp.summarizer import generate_notes
+    BACKEND_AVAILABLE = True
 except ImportError as e:
-    st.error(f"❌ Missing dependency: {e}")
-    st.info("Install with: pip install openai-whisper groq torch")
-    st.stop()
+    BACKEND_AVAILABLE = False
+    st.warning(f"⚠️ Backend services not available: {e}")
+    st.info("Running in limited mode. Some features may not work.")
+    AudioTranscriptionService = None
+    generate_notes = None
 
 try:
     from dotenv import load_dotenv

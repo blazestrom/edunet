@@ -1,4 +1,10 @@
-from groq import Groq
+try:
+    from groq import Groq
+    GROQ_AVAILABLE = True
+except ImportError:
+    GROQ_AVAILABLE = False
+    Groq = None
+
 import os
 import logging
 
@@ -9,8 +15,12 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 def generate_notes(text: str) -> str:
     """Generate study notes from lecture transcript using Groq API.
     
-    Returns None if GROQ_API_KEY is not set.
+    Returns None if GROQ_API_KEY is not set or groq not installed.
     """
+    if not GROQ_AVAILABLE:
+        logger.warning("Groq not installed - skipping note generation. Install with: pip install groq")
+        return None
+    
     if not GROQ_API_KEY:
         logger.warning("GROQ_API_KEY not set - skipping note generation")
         return None

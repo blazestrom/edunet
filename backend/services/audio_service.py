@@ -1,7 +1,6 @@
 import os
 import logging
 import subprocess
-import torch
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +11,15 @@ try:
 except ImportError as e:
     logger.warning(f"Whisper not available: {e}")
     WHISPER_AVAILABLE = False
+
+# Try to import torch (optional - for CUDA detection)
+# Safe import with fallback - torch may not be available in all environments
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None  # Explicitly set to None if not available
 
 # Global model instance - loaded once at module level for efficiency
 _global_model = None
@@ -48,7 +56,14 @@ def _load_global_model(model_name="tiny"):
         return None
     
     try:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        # Detect CUDA if torch available
+        device = "cpu"  # Default to CPU
+        if TORCH_AVAILABLE and torch is not None:
+            try:
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+            except:
+                device = "cpu"
+        
         logger.info(f"Loading Whisper model '{model_name}' on device: {device}")
         _global_model = whisper.load_model(model_name, device=device)
         logger.info(f"✅ Whisper model loaded successfully on {device}")

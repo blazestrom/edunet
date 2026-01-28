@@ -5,14 +5,23 @@ from pathlib import Path
 import tempfile
 
 # Add backend to path
-sys.path.insert(0, str(Path(__file__).parent / "backend"))
+backend_path = str(Path(__file__).parent / "backend")
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
 
-from services.audio_service import AudioTranscriptionService
-from nlp.summarizer import generate_notes
-from dotenv import load_dotenv
+try:
+    from services.audio_service import AudioTranscriptionService
+    from nlp.summarizer import generate_notes
+except ImportError as e:
+    st.error(f"❌ Missing dependency: {e}")
+    st.info("Install with: pip install openai-whisper groq torch")
+    st.stop()
 
-# Load environment variables
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Page config
 st.set_page_config(
@@ -22,30 +31,143 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS
-st.markdown("""
+# Initialize theme in session state
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
+
+# Function to get CSS based on theme
+def get_theme_css(theme):
+    if theme == "dark":
+        return """
 <style>
+    :root {
+        --bg-primary: #1a1a2e;
+        --bg-secondary: #16213e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #b0b0b0;
+        --accent-primary: #6366f1;
+        --accent-dark: #4f46e5;
+        --accent-secondary: #10b981;
+    }
+    
     .main {
         padding-top: 2rem;
+        background-color: #1a1a2e;
     }
+    
+    [data-testid="stHeader"] {
+        background-color: #16213e;
+    }
+    
+    [data-testid="stSidebar"] {
+        background-color: #16213e;
+    }
+    
     .stButton > button {
         width: 100%;
         height: 50px;
         font-size: 18px;
         border-radius: 10px;
+        background-color: #6366f1;
+        color: white;
+        font-weight: bold;
+        border: none;
     }
+    
+    .stButton > button:hover {
+        background-color: #4f46e5;
+    }
+    
     .transcript-box {
-        background-color: #f0f2f6;
+        background-color: #16213e;
         padding: 20px;
         border-radius: 10px;
         border-left: 5px solid #6366f1;
+        color: #e0e0e0;
+        font-size: 16px;
+        line-height: 1.6;
     }
+    
     .notes-box {
-        background-color: #f0f2f6;
+        background-color: #1f3a3a;
         padding: 20px;
         border-radius: 10px;
         border-left: 5px solid #10b981;
+        color: #e0e0e0;
+        font-size: 16px;
+        line-height: 1.6;
     }
+    
+    .success-box {
+        background-color: #1a3a2e;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #10b981;
+        color: #86efac;
+    }
+    
+    .error-box {
+        background-color: #3a1a1a;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #ef4444;
+        color: #fca5a5;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        color: #e0e0e0;
+    }
+    
+    p, .stMarkdown {
+        color: #b0b0b0;
+    }
+    
+    .stSelectbox, .stSlider, .stCheckbox, .stFileUploader {
+        color: #e0e0e0;
+    }
+</style>
+"""
+    else:  # light mode
+        return """
+<style>
+    .main {
+        padding-top: 2rem;
+    }
+    
+    .stButton > button {
+        width: 100%;
+        height: 50px;
+        font-size: 18px;
+        border-radius: 10px;
+        background-color: #6366f1;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .stButton > button:hover {
+        background-color: #4f46e5;
+    }
+    
+    .transcript-box {
+        background-color: #e0e7ff;
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 5px solid #6366f1;
+        color: #1e293b;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
+    .notes-box {
+        background-color: #dcfce7;
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 5px solid #10b981;
+        color: #1e293b;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
     .success-box {
         background-color: #d1fae5;
         padding: 15px;
@@ -53,6 +175,7 @@ st.markdown("""
         border-left: 5px solid #10b981;
         color: #065f46;
     }
+    
     .error-box {
         background-color: #fee2e2;
         padding: 15px;
@@ -60,8 +183,19 @@ st.markdown("""
         border-left: 5px solid #ef4444;
         color: #7f1d1d;
     }
+    
+    h1, h2, h3 {
+        color: #1e293b;
+    }
+    
+    p {
+        color: #334155;
+    }
 </style>
-""", unsafe_allow_html=True)
+"""
+
+# Apply theme CSS
+st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
 
 # Title
 st.markdown("# 🎤 Voice Notes Processor")
@@ -72,7 +206,20 @@ st.markdown("---")
 with st.sidebar:
     st.markdown("### ⚙️ Settings")
     
-    st.markdown("**🎵 Audio Settings**")
+    st.markdown("**� Theme**")
+    theme_col1, theme_col2 = st.columns(2)
+    with theme_col1:
+        if st.button("☀️ Light", use_container_width=True, type="secondary"):
+            st.session_state.theme = "light"
+            st.rerun()
+    with theme_col2:
+        if st.button("🌙 Dark", use_container_width=True, type="secondary"):
+            st.session_state.theme = "dark"
+            st.rerun()
+    
+    st.divider()
+    
+    st.markdown("**�🎵 Audio Settings**")
     model_size = st.selectbox(
         "Whisper Model Size",
         ["tiny", "base", "small", "medium", "large"],

@@ -1,0 +1,17 @@
+Create flashcards for efficient revision and memorization.
+
+Format:
+Q: Question/Definition
+A: Short, crisp answer
+
+Rules:
+- Focus on definitions, formulas, key concepts, and important facts
+- Avoid long explanations - keep answers concise and to the point
+- Make each card self-contained and independent
+- Include context when necessary but keep it brief
+- Use technical terms appropriately
+- One concept per card
+- Cards should be suitable for spaced repetition
+
+Content to convert into flashcards:
+{SUMMARY}

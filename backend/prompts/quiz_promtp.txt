@@ -1,0 +1,27 @@
+Generate {NUM_QUESTIONS} multiple-choice quiz questions from the lecture content.
+
+Format for each question:
+Q: [Question text]
+A) [Option A]
+B) [Option B]
+C) [Option C]
+D) [Option D]
+Correct Answer: [A/B/C/D]
+Explanation: [Brief explanation of why this is correct]
+
+Rules:
+- Each question must test conceptual understanding
+- Questions should cover different topics from the content
+- Options should be plausible but distinct
+- Difficulty level: Medium (suitable for exam preparation)
+- Avoid trick questions
+- Include one question testing application of concepts
+- Include questions testing definitions
+- Include questions testing relationships between concepts
+- Make sure correct answers are distributed across A, B, C, D
+- Explanations should help learning
+
+Lecture Content:
+{SUMMARY}
+
+Please generate the quiz questions:

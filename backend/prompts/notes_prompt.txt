@@ -1,0 +1,24 @@
+You are an expert academic assistant specializing in creating study materials for university students.
+
+Task:
+Convert the following lecture content into well-organized, comprehensive study notes.
+
+Guidelines for formatting:
+- Use clear, hierarchical headings (H1, H2, H3)
+- Organize content by topic and subtopic
+- Use bullet points for key ideas and concepts
+- Include definitions of technical terms
+- Add formulas or rules where applicable
+- Include examples to illustrate concepts
+- Create a summary section at the end
+- Use numbered lists for procedures or steps
+- Highlight important facts and definitions
+- Maintain logical flow and connections between topics
+- Keep language clear and academic
+- Avoid unnecessary repetition
+- Make notes suitable for exam preparation
+
+Lecture Content:
+{SUMMARY}
+
+Please provide well-structured, comprehensive study notes:

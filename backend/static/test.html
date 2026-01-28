@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Voice-to-Notes Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .upload-section {
+            margin-bottom: 25px;
+        }
+
+        .upload-section label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-name {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 8px;
+            word-break: break-word;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group input,
+        .input-group textarea,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .input-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal;
+            margin: 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb:hover {
+            background: #764ba2;
+        }
+
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .result-content {
+            color: #555;
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-size: 0.95em;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .results-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #999;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: -2px 0 0 0;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 Lecture Voice-to-Notes Generator</h1>
+            <p>Convert your lectures into comprehensive study materials with AI</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Input Section -->
+            <div class="card">
+                <h2>📤 Upload & Configure</h2>
+                
+                <!-- Tab Navigation -->
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="file" style="background:none;border:none;padding:10px 15px;">File Upload</button>
+                    <button class="tab-button" data-tab="text" style="background:none;border:none;padding:10px 15px;">Text Input</button>
+                </div>
+
+                <!-- File Upload Tab -->
+                <div id="file" class="tab-content active">
+                    <div class="upload-section">
+                        <label>Audio File</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="audioFile" accept="audio/*" />
+                            <label for="audioFile" class="file-input-label">
+                                Click to upload audio file (WAV, MP3, FLAC, etc.)
+                            </label>
+                        </div>
+                        <div id="fileName" class="file-name"></div>
+                    </div>
+                </div>
+
+                <!-- Text Input Tab -->
+                <div id="text" class="tab-content">
+                    <div class="upload-section">
+                        <label for="transcriptText">Paste Transcript</label>
+                        <textarea id="transcriptText" placeholder="Paste your lecture transcript here..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Metadata -->
+                <div class="input-group">
+                    <input type="text" id="courseName" placeholder="Course Name (optional)">
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="topic" placeholder="Lecture Topic (optional)">
+                </div>
+
+                <!-- Generation Options -->
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">📊 Generate</h3>
+
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="generateQuiz" checked>
+                        Quiz Questions
+                    </label>
+                    <label>
+                        <input type="checkbox" id="generateFlashcards" checked>
+                        Flashcards
+                    </label>
+                </div>
+
+                <!-- Quiz Questions Count -->
+                <div class="slider-group">
+                    <label for="quizCount">Quiz Questions: <span id="quizCountLabel">5</span></label>
+                    <input type="range" id="quizCount" min="1" max="20" value="5" disabled>
+                    <div class="slider-value" id="quizValue">5 questions</div>
+                </div>
+
+                <!-- Flashcard Count -->
+                <div class="slider-group">
+                    <label for="cardCount">Flashcards: <span id="cardCountLabel">10</span></label>
+                    <input type="range" id="cardCount" min="5" max="50" value="10" disabled>
+                    <div class="slider-value" id="cardValue">10 flashcards</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button class="btn-primary" id="processBtn" onclick="processAudio()">
+                        ⚡ Process
+                    </button>
+                    <button class="btn-secondary" onclick="clearForm()">
+                        🔄 Clear
+                    </button>
+                </div>
+
+                <!-- Status Message -->
+                <div id="statusMessage" class="status-message"></div>
+
+                <!-- Loading Indicator -->
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Processing your lecture...</p>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="card">
+                <h2>📚 Results</h2>
+                <div id="resultsContainer" style="display: none;">
+                    <div class="results-section" id="results">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+                <div id="noResults" style="color: #999; text-align: center; padding: 40px 20px;">
+                    <p>📝 Process audio to see results here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const tab = e.target.dataset.tab;
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(tab).classList.add('active');
+            });
+        });
+
+        // File upload
+        document.getElementById('audioFile').addEventListener('change', (e) => {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('fileName').textContent = fileName ? `Selected: ${fileName}` : '';
+        });
+
+        // Quiz checkbox toggle
+        document.getElementById('generateQuiz').addEventListener('change', (e) => {
+            document.getElementById('quizCount').disabled = !e.target.checked;
+        });
+
+        // Flashcard checkbox toggle
+        document.getElementById('generateFlashcards').addEventListener('change', (e) => {
+            document.getElementById('cardCount').disabled = !e.target.checked;
+        });
+
+        // Quiz count slider
+        document.getElementById('quizCount').addEventListener('input', (e) => {
+            document.getElementById('quizCountLabel').textContent = e.target.value;
+            document.getElementById('quizValue').textContent = `${e.target.value} questions`;
+        });
+
+        // Flashcard count slider
+        document.getElementById('cardCount').addEventListener('input', (e) => {
+            document.getElementById('cardCountLabel').textContent = e.target.value;
+            document.getElementById('cardValue').textContent = `${e.target.value} flashcards`;
+        });
+
+        async function processAudio() {
+            try {
+                const audioFile = document.getElementById('audioFile').files[0];
+                const transcriptText = document.getElementById('transcriptText').value;
+                const courseName = document.getElementById('courseName').value;
+                const topic = document.getElementById('topic').value;
+                const generateQuiz = document.getElementById('generateQuiz').checked;
+                const generateFlashcards = document.getElementById('generateFlashcards').checked;
+                const quizCount = parseInt(document.getElementById('quizCount').value);
+                const flashcardCount = parseInt(document.getElementById('cardCount').value);
+
+                // Validate input
+                if (!audioFile && !transcriptText) {
+                    showStatus('Please upload an audio file or paste a transcript', 'error');
+                    return;
+                }
+
+                // Show loading
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('statusMessage').style.display = 'none';
+
+                let transcript = transcriptText;
+
+                // Transcribe audio if file provided
+                if (audioFile) {
+                    showStatus('Transcribing audio...', 'info');
+                    transcript = await transcribeAudio(audioFile);
+                }
+
+                if (!transcript) {
+                    throw new Error('Failed to get transcript');
+                }
+
+                // Process transcript
+                showStatus('Processing transcript...', 'info');
+                const result = await fetch('/api/audio/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        transcript,
+                        course_name: courseName,
+                        topic,
+                        generate_quiz: generateQuiz,
+                        generate_flashcards: generateFlashcards,
+                        quiz_questions: quizCount,
+                        flashcard_count: flashcardCount
+                    })
+                });
+
+                if (!result.ok) {
+                    throw new Error(`API error: ${result.statusText}`);
+                }
+
+                const data = await result.json();
+
+                // Display results
+                displayResults(data);
+                showStatus('✓ Processing completed successfully!', 'success');
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function transcribeAudio(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/api/audio/transcribe-file', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Transcription failed');
+            }
+
+            const data = await response.json();
+            return data.transcript;
+        }
+
+        function displayResults(data) {
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+
+            if (data.transcript) {
+                resultsContainer.innerHTML += createResultCard('📄 Transcript', data.transcript.substring(0, 300) + '...');
+            }
+
+            if (data.notes) {
+                resultsContainer.innerHTML += createResultCard('📝 Study Notes', data.notes);
+            }
+
+            if (data.quiz) {
+                resultsContainer.innerHTML += createResultCard('📋 Quiz Questions', data.quiz);
+            }
+
+            if (data.flashcards) {
+                resultsContainer.innerHTML += createResultCard('🎴 Flashcards', data.flashcards);
+            }
+
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'block';
+        }
+
+        function createResultCard(title, content) {
+            return `
+                <div class="result-card">
+                    <h3>${title}</h3>
+                    <div class="result-content">${escapeHtml(content)}</div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function showStatus(message, type) {
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.textContent = message;
+            statusMsg.className = `status-message ${type}`;
+            statusMsg.style.display = 'block';
+        }
+
+        function clearForm() {
+            document.getElementById('audioFile').value = '';
+            document.getElementById('fileName').textContent = '';
+            document.getElementById('transcriptText').value = '';
+            document.getElementById('courseName').value = '';
+            document.getElementById('topic').value = '';
+            document.getElementById('statusMessage').style.display = 'none';
+            document.getElementById('noResults').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+        }
+
+        // Check API health on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/audio/health');
+                if (!response.ok) {
+                    console.warn('API health check failed');
+                }
+            } catch (error) {
+                console.error('Cannot connect to API:', error);
+                showStatus('⚠️ Warning: Cannot connect to API backend', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
